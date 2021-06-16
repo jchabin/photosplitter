@@ -1,0 +1,79 @@
+<style>
+	#preview{
+		max-width: 50vmin;
+		max-height: 50vmin;
+	}
+	#output{
+		white-space: nowrap;
+		line-height: 0;
+	}
+	.out{
+		height: 40vmin;
+	}
+	a{
+		margin: 0.3vmin;
+		display: inline-block;
+		cursor: pointer;
+	}
+</style>
+
+Split into <input id="row" type="number" value="2"> rows and <input id="col" type="number" value="2"> collumns.
+<br/>
+<br/>
+<input type="file" accept="image/*" id="upload"> <button id="go" onclick="go()" disabled>Split</button>
+<br/>
+<br/>
+<img id="preview">
+<br/>
+<br/>
+<div id="output"></div>
+
+<script>
+	var upload = document.getElementById("upload");
+	var preview = document.getElementById("preview");
+	var goElem = document.getElementById("go");
+	var row = document.getElementById("row");
+	var col = document.getElementById("col");
+	var output = document.getElementById("output");
+	
+	upload.oninput = function(){
+		var read = new FileReader();
+		read.onload = function(e){ preview.src = e.target.result; goElem.disabled = false; };
+		read.readAsDataURL(upload.files[0]);
+	}
+	
+	function go(){
+		var height = preview.naturalHeight;
+		var width = preview.naturalWidth;
+		var halfHeight = Math.floor(height / 2);
+		var halfWidth = Math.floor(width / 2);
+		var rows = row.value;
+		var cols = col.value;
+		var size = Math.floor(Math.min(height / rows, width / cols));
+		output.innerHTML = "";
+		for(var r = 0; r < rows; r++){
+			for(var c = 0; c < cols; c++){
+				var a = document.createElement("A");
+				var can = document.createElement("CANVAS");
+				can.width = size; can.height = size;
+				var ctx = can.getContext("2d");
+				ctx.drawImage(
+					preview,
+					halfWidth - Math.floor(size * cols / 2) + c * size,
+					halfHeight - Math.floor(size * rows / 2) + r * size,
+					size, size,
+					0, 0,
+					size, size
+				);
+				can.className = "out";
+				a.appendChild(can)
+				output.appendChild(a);
+				
+				var url = can.toDataURL().replace("image/png", "application/octet-stream");
+				a.href = url;
+				a.download = r + "_" + c + "_" + upload.files[0].name;
+			}
+			output.appendChild(document.createElement("BR"));
+		}
+	}
+</script>
